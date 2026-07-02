@@ -462,6 +462,176 @@
       cursor: pointer;
     }
 
+    .result-card {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 18px;
+      overflow: hidden;
+      border: 1px solid #d8dee9;
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at top right, rgba(204, 0, 0, .12), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
+    }
+
+    .result-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .result-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .result-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 9px;
+      background: #cc0000;
+      color: #fff;
+      font-size: 19px;
+      font-weight: 950;
+    }
+
+    .result-brand strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.12;
+    }
+
+    .result-brand span {
+      color: #687386;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .result-pill {
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #e9f8ed;
+      color: #176a2e;
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .result-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .result-metric {
+      padding: 10px;
+      border: 1px solid #e0e5ee;
+      border-radius: 8px;
+      background: rgba(255,255,255,.86);
+    }
+
+    .result-metric span {
+      display: block;
+      color: #687386;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .result-metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .result-layout {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 10px;
+    }
+
+    .result-table,
+    .result-form {
+      min-height: 0;
+      border: 1px solid #e0e5ee;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .result-table-head,
+    .result-form-head {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf0f5;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: 1fr 86px 78px;
+      gap: 8px;
+      padding: 9px 12px;
+      border-bottom: 1px solid #edf0f5;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .result-row:last-child { border-bottom: 0; }
+
+    .result-tag {
+      justify-self: start;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #fff0f0;
+      color: #cc0000;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .result-status {
+      justify-self: start;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #fff2cc;
+      color: #815800;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .result-form-body {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .result-field {
+      height: 30px;
+      border: 1px solid #d6dce7;
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .result-cta {
+      display: grid;
+      place-items: center;
+      height: 34px;
+      border-radius: 7px;
+      background: #cc0000;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
     .modal {
       position: fixed;
       inset: 0;
@@ -817,7 +987,30 @@
             </div>
           </div>
           <div class="state done">
-            <div class="preview"><iframe id="goodFrame" title="good側の完成画面"></iframe></div>
+            <div class="result-card" id="goodPreviewCard">
+              <div class="result-top">
+                <div class="result-brand"><div class="result-mark">Z</div><div><strong>Zettai経費管理</strong><span>定義が効いたSaaS画面</span></div></div>
+                <div class="result-pill">カテゴリ・表記・承認状態を統一</div>
+              </div>
+              <div class="result-metrics">
+                <div class="result-metric"><span>今月の申請</span><strong>6件</strong></div>
+                <div class="result-metric"><span>申請金額</span><strong>42,900円</strong></div>
+                <div class="result-metric"><span>承認済</span><strong>2件</strong></div>
+                <div class="result-metric"><span>領収書</span><strong>3件</strong></div>
+              </div>
+              <div class="result-layout">
+                <div class="result-table">
+                  <div class="result-table-head">経費一覧</div>
+                  <div class="result-row"><span>JR東日本</span><span class="result-tag">交通費</span><span class="result-status">下書き</span></div>
+                  <div class="result-row"><span>東京交通</span><span class="result-tag">交通費</span><span class="result-status">申請中</span></div>
+                  <div class="result-row"><span>青山会館</span><span class="result-tag">接待費</span><span class="result-status">承認済</span></div>
+                </div>
+                <div class="result-form">
+                  <div class="result-form-head">新規申請</div>
+                  <div class="result-form-body"><div class="result-field"></div><div class="result-field"></div><div class="result-field"></div><div class="result-cta">完成ツールで操作する</div></div>
+                </div>
+              </div>
+            </div>
             <div class="tool-actions"><button class="open-tool" data-open-tool="good">完成ツールを大きく見る</button></div>
             <div class="reveal-list" id="goodReveal"></div>
           </div>
@@ -1139,8 +1332,10 @@
       state[kind].token += 1;
       state[kind].done = true;
       const frame = document.getElementById(`${kind}Frame`);
-      frame.onload = () => updateFrameReveal(kind);
-      frame.srcdoc = data[kind].html;
+      if (frame) {
+        frame.onload = () => updateFrameReveal(kind);
+        frame.srcdoc = data[kind].html;
+      }
       setPane(kind, "done", "完成");
       updateFrameReveal(kind);
       updateSummary();
@@ -1150,7 +1345,8 @@
       state[kind].token += 1;
       state[kind].done = false;
       document.getElementById(`${kind}Logs`).innerHTML = "";
-      document.getElementById(`${kind}Frame`).srcdoc = "";
+      const frame = document.getElementById(`${kind}Frame`);
+      if (frame) frame.srcdoc = "";
       clearWire(kind);
       setPane(kind, "idle", "待機中");
     }
@@ -1172,8 +1368,9 @@
 
     function updateFrameReveal(kind) {
       const frame = document.getElementById(`${kind}Frame`);
-      if (!frame.contentDocument) return;
-      frame.contentDocument.body.classList.toggle("show-reveal", document.getElementById("revealToggle").checked);
+      if (frame && frame.contentDocument) {
+        frame.contentDocument.body.classList.toggle("show-reveal", document.getElementById("revealToggle").checked);
+      }
       const modalFrame = document.getElementById("modalFrame");
       if (modalFrame.contentDocument) {
         modalFrame.contentDocument.body.classList.toggle("show-reveal", document.getElementById("revealToggle").checked);
