@@ -1,0 +1,1743 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLAUDE.md 比較デモ</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #111827;
+      --muted: #5b6472;
+      --soft: #f4f6fa;
+      --panel: #ffffff;
+      --line: #d8dee9;
+      --dark: #111827;
+      --bad: #0044cc;
+      --good: #cc0000;
+      --warn: #fff4c7;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 1180px;
+      min-height: 720px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+      color: var(--ink);
+      background: #eef2f7;
+    }
+
+    button, input { font: inherit; }
+
+    .deck {
+      height: 100vh;
+      min-height: 720px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 12px 28px rgba(17, 24, 39, .08);
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .06em;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .request {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #1f2937;
+      border-radius: 7px;
+      background: var(--warn);
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .point {
+      margin: 8px 0 0;
+      color: #3b4351;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .actions {
+      min-width: 388px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 9px 13px;
+      border: 0;
+      border-radius: 7px;
+      background: var(--dark);
+      color: #fff;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, .18);
+    }
+
+    .btn.secondary {
+      border: 2px solid var(--dark);
+      background: #fff;
+      color: var(--dark);
+    }
+
+    .btn.bad { background: var(--bad); }
+    .btn.good { background: var(--good); }
+    .btn:active { transform: translateY(1px); box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
+
+    .toggle {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .toggle input {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--dark);
+    }
+
+    .panes {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .pane {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 12px 28px rgba(17, 24, 39, .08);
+    }
+
+    .pane-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcff;
+    }
+
+    .folder {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 950;
+      line-height: 1.1;
+    }
+
+    .pane[data-kind="bad"] .folder { color: var(--bad); }
+    .pane[data-kind="good"] .folder { color: var(--good); }
+
+    .caption {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .status {
+      min-width: 116px;
+      padding: 6px 9px;
+      text-align: center;
+      border-radius: 999px;
+      background: #edf1f7;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .pane-body {
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .state {
+      display: none;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .pane[data-state="idle"] .idle,
+    .pane[data-state="running"] .running,
+    .pane[data-state="done"] .done {
+      display: grid;
+    }
+
+    .idle {
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .file {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border: 1px solid #b7c1d0;
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .file-tab {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 11px;
+      border-bottom: 1px solid #cbd3df;
+      background: #e9edf5;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .code {
+      min-height: 0;
+      margin: 0;
+      padding: 8px 0;
+      overflow: auto;
+      background: #101722;
+      color: #eef4ff;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .code-line {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      min-height: 20px;
+      padding-right: 10px;
+    }
+
+    .ln {
+      user-select: none;
+      text-align: right;
+      padding-right: 10px;
+      color: #778197;
+    }
+
+    .txt { white-space: pre; }
+    .code-line.read { background: rgba(220, 231, 255, .16); }
+    .code-line.focus { background: rgba(255, 219, 80, .30); }
+
+    .audit {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      border-top: 1px solid #cbd3df;
+      background: #f7f9fd;
+    }
+
+    .chip {
+      min-height: 34px;
+      display: grid;
+      place-items: center;
+      padding: 5px 6px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #d8dee9;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    .pane[data-kind="bad"] .chip { background: #fff4f0; }
+    .pane[data-kind="good"] .chip { background: #f0fff4; }
+
+    .running {
+      grid-template-rows: 33% 22% minmax(0, 1fr);
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .terminal {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid #273244;
+      border-radius: var(--radius);
+      background: #0b111b;
+    }
+
+    .terminal-title {
+      padding: 6px 10px;
+      background: #161f2e;
+      color: #aeb9ca;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .logs {
+      min-height: 0;
+      padding: 8px 10px;
+      overflow: hidden;
+      color: #d8f5dc;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .log-line {
+      opacity: 0;
+      transform: translateY(7px);
+      animation: rise 220ms ease forwards;
+    }
+
+    @keyframes rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .assembly {
+      min-height: 0;
+      padding: 10px;
+      overflow: hidden;
+      border: 1px solid #cbd3df;
+      border-radius: var(--radius);
+      background: #f7f9fd;
+    }
+
+    .wire {
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 12px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+      transition: background 260ms ease;
+      position: relative;
+    }
+
+    .wire.painted {
+      background: var(--paint);
+    }
+
+    .wire.painted::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, .28);
+      animation: flash 360ms ease forwards;
+      pointer-events: none;
+    }
+
+    @keyframes flash {
+      from { transform: translateX(-100%); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+
+    .skeleton {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 280ms ease, transform 280ms ease;
+    }
+
+    .skeleton.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .wire-head, .wire-form {
+      height: 34px;
+      border-radius: 5px;
+      background: rgba(17, 24, 39, .10);
+    }
+
+    .wire-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .wire-card {
+      height: 44px;
+      border-radius: 5px;
+      background: rgba(17, 24, 39, .13);
+    }
+
+    .wire-table {
+      display: grid;
+      align-content: start;
+      gap: 5px;
+      min-height: 0;
+    }
+
+    .wire-row {
+      height: 22px;
+      border-radius: 4px;
+      background: rgba(17, 24, 39, .12);
+    }
+
+    .wire.painted .wire-head,
+    .wire.painted .wire-form,
+    .wire.painted .wire-card,
+    .wire.painted .wire-row {
+      background: rgba(255, 255, 255, .88);
+    }
+
+    .done {
+      grid-template-rows: minmax(0, 1fr) auto auto;
+      gap: 10px;
+    }
+
+    .preview {
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid #aeb9ca;
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    .tool-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .open-tool {
+      min-height: 36px;
+      padding: 7px 12px;
+      border: 1px solid #cbd3df;
+      border-radius: 7px;
+      background: #fff;
+      color: #111827;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      padding: 0;
+      background: rgba(17, 24, 39, .72);
+    }
+
+    .modal[hidden] { display: none; }
+
+    .modal-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 0;
+      background: #fff;
+      border: 1px solid #d8dee9;
+      border-bottom: 0;
+      font-weight: 900;
+    }
+
+    .modal-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .modal-view {
+      min-height: 34px;
+      padding: 6px 12px;
+      border: 1px solid #cbd3df;
+      border-radius: 7px;
+      background: #fff;
+      color: #111827;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .modal[data-view="desktop"] .modal-view[data-view="desktop"],
+    .modal[data-view="mobile"] .modal-view[data-view="mobile"] {
+      border-color: #cc0000;
+      background: #cc0000;
+      color: #fff;
+    }
+
+    .modal-close {
+      min-height: 34px;
+      padding: 6px 12px;
+      border: 1px solid #111827;
+      border-radius: 7px;
+      background: #111827;
+      color: #fff;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .modal-frame {
+      overflow: hidden;
+      border: 1px solid #d8dee9;
+      border-radius: 0;
+      background: #fff;
+      transition: width 180ms ease, height 180ms ease, border-radius 180ms ease, margin 180ms ease;
+    }
+
+    .modal[data-view="mobile"] {
+      background: #111827;
+    }
+
+    .modal[data-view="mobile"] .modal-frame {
+      width: 390px;
+      max-width: calc(100vw - 24px);
+      height: calc(100vh - 70px);
+      justify-self: center;
+      align-self: center;
+      margin: 8px 0 12px;
+      border-radius: 22px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .45);
+    }
+
+    .reveal-list {
+      display: none;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    body.show-reveal .reveal-list { display: grid; }
+
+    .reveal-card {
+      min-height: 58px;
+      padding: 7px 8px;
+      border: 1px solid #dfc95c;
+      border-radius: 7px;
+      background: #fff8d7;
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 800;
+    }
+
+    .num {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .detail-launch {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .detail-launch[hidden] { display: none; }
+
+    .detail-open {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 0;
+      border-radius: 7px;
+      background: #cc0000;
+      color: #fff;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, .16);
+    }
+
+    .detail-page {
+      position: fixed;
+      inset: 0;
+      z-index: 18;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      background: #f4f6fa;
+      color: #111827;
+    }
+
+    .detail-page[hidden] { display: none; }
+
+    .detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: #111827;
+      color: #fff;
+    }
+
+    .detail-head h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .detail-close {
+      min-height: 36px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 7px;
+      background: #fff;
+      color: #111827;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .detail-body {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .detail-card {
+      padding: 16px;
+      border: 1px solid #d8dee9;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(17, 24, 39, .08);
+    }
+
+    .detail-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .detail-card h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .detail-card p {
+      margin: 0 0 10px;
+      color: #3b4351;
+      font-size: 16px;
+      font-weight: 750;
+      line-height: 1.55;
+    }
+
+    .detail-card ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #111827;
+      font-size: 15px;
+      font-weight: 760;
+      line-height: 1.58;
+    }
+
+    .map-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1.2fr;
+      overflow: hidden;
+      border: 1px solid #d8dee9;
+      border-radius: 8px;
+    }
+
+    .map-grid div {
+      padding: 10px 12px;
+      border-right: 1px solid #d8dee9;
+      border-bottom: 1px solid #d8dee9;
+      font-size: 14px;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+
+    .map-grid div:nth-child(3n) { border-right: 0; }
+    .map-grid div:nth-last-child(-n+3) { border-bottom: 0; }
+    .map-head { background: #111827; color: #fff; }
+    .bad-note { background: #fff1f1; }
+    .good-note { background: #f0fff4; }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header class="top">
+      <div>
+        <p class="eyebrow">CLAUDE.md デモ / 定義の有無で出力が変わる</p>
+        <h1>同じ依頼、違うCLAUDE.md</h1>
+        <div class="request">「経費管理ツールの画面（HTML）を作ってください」</div>
+        <p class="point">見るポイント：色ではなく、カテゴリ・ステータス・表記・不明点の扱いが揃うか。</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="runBoth">両方同時に実行</button>
+        <button class="btn secondary" id="resetAll">リセット</button>
+        <label class="toggle"><input id="revealToggle" type="checkbox">種明かしを表示</label>
+      </div>
+    </header>
+
+    <main class="panes">
+      <section class="pane" data-kind="bad" data-state="idle">
+        <div class="pane-head">
+          <div>
+            <p class="folder">bad-claude-md</p>
+            <p class="caption">定義がない。古い見本と一回きりの指示が混ざっている。</p>
+          </div>
+          <div class="status" id="badStatus">待機中</div>
+        </div>
+        <div class="pane-body">
+          <div class="state idle">
+            <div class="file">
+              <div class="file-tab"><span>CLAUDE.md</span><span>ノイズ過多</span></div>
+              <pre class="code" id="badIdleCode"></pre>
+              <div class="audit">
+                <div class="chip">古いコード見本</div>
+                <div class="chip">定義なし</div>
+                <div class="chip">今週だけの指示</div>
+              </div>
+            </div>
+            <button class="btn bad run-one" data-run="bad">実行</button>
+          </div>
+          <div class="state running" data-skip="bad" title="クリックでスキップ">
+            <div class="file">
+              <div class="file-tab"><span>CLAUDE.md 読み込み中</span><span>クリックでスキップ</span></div>
+              <pre class="code" id="badRunCode"></pre>
+              <div class="audit">
+                <div class="chip">行を上から読む</div>
+                <div class="chip">見本に引っ張られる</div>
+                <div class="chip">不足分を推測</div>
+              </div>
+            </div>
+            <div class="terminal">
+              <div class="terminal-title">generation log</div>
+              <div class="logs" id="badLogs"></div>
+            </div>
+            <div class="assembly">
+              <div class="wire" id="badWire" style="--paint:#0044cc">
+                <div class="wire-head skeleton" data-part="header"></div>
+                <div class="wire-cards skeleton" data-part="cards"><div class="wire-card"></div><div class="wire-card"></div><div class="wire-card"></div></div>
+                <div class="wire-table skeleton" data-part="table"><div class="wire-row"></div><div class="wire-row"></div><div class="wire-row"></div><div class="wire-row"></div><div class="wire-row"></div></div>
+                <div class="wire-form skeleton" data-part="form"></div>
+              </div>
+            </div>
+          </div>
+          <div class="state done">
+            <div class="preview"><iframe id="badFrame" title="bad側の完成画面"></iframe></div>
+            <div class="tool-actions"><button class="open-tool" data-open-tool="bad">完成ツールを大きく見る</button></div>
+            <div class="reveal-list" id="badReveal"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pane" data-kind="good" data-state="idle">
+        <div class="pane-head">
+          <div>
+            <p class="folder">good-claude-md</p>
+            <p class="caption">短く、毎回効く定義だけを書く。消したらミスる行だけ残す。</p>
+          </div>
+          <div class="status" id="goodStatus">待機中</div>
+        </div>
+        <div class="pane-body">
+          <div class="state idle">
+            <div class="file">
+              <div class="file-tab"><span>CLAUDE.md</span><span>定義済み</span></div>
+              <pre class="code" id="goodIdleCode"></pre>
+              <div class="audit">
+                <div class="chip">用語の定義</div>
+                <div class="chip">表記ルール</div>
+                <div class="chip">推測禁止</div>
+              </div>
+            </div>
+            <button class="btn good run-one" data-run="good">実行</button>
+          </div>
+          <div class="state running" data-skip="good" title="クリックでスキップ">
+            <div class="file">
+              <div class="file-tab"><span>CLAUDE.md 読み込み中</span><span>クリックでスキップ</span></div>
+              <pre class="code" id="goodRunCode"></pre>
+              <div class="audit">
+                <div class="chip">定義を適用</div>
+                <div class="chip">表記を統一</div>
+                <div class="chip">不明点を明示</div>
+              </div>
+            </div>
+            <div class="terminal">
+              <div class="terminal-title">generation log</div>
+              <div class="logs" id="goodLogs"></div>
+            </div>
+            <div class="assembly">
+              <div class="wire" id="goodWire" style="--paint:#cc0000">
+                <div class="wire-head skeleton" data-part="header"></div>
+                <div class="wire-cards skeleton" data-part="cards"><div class="wire-card"></div><div class="wire-card"></div><div class="wire-card"></div></div>
+                <div class="wire-table skeleton" data-part="table"><div class="wire-row"></div><div class="wire-row"></div><div class="wire-row"></div><div class="wire-row"></div><div class="wire-row"></div></div>
+                <div class="wire-form skeleton" data-part="form"></div>
+              </div>
+            </div>
+          </div>
+          <div class="state done">
+            <div class="preview"><iframe id="goodFrame" title="good側の完成画面"></iframe></div>
+            <div class="tool-actions"><button class="open-tool" data-open-tool="good">完成ツールを大きく見る</button></div>
+            <div class="reveal-list" id="goodReveal"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="detail-launch" id="detailLaunch" hidden>
+      <button class="detail-open" id="detailOpen">詳細解説へ</button>
+    </div>
+  </div>
+
+  <section class="detail-page" id="detailPage" hidden>
+    <div class="detail-head">
+      <h2>なぜ同じ依頼で、ここまで差が出たのか</h2>
+      <button class="detail-close" id="detailClose">戻る</button>
+    </div>
+    <div class="detail-body">
+      <article class="detail-card">
+        <h3>bad側で起きたこと</h3>
+        <p>AIは空白を嫌います。カテゴリ、ステータス、日付、金額、必須項目が未定義だと、近くにある見本や曖昧な一文から補完します。</p>
+        <ul>
+          <li>古い在庫管理のHTMLを「正解に近い型」と見なした</li>
+          <li>経費に不要な「在庫数」列まで残した</li>
+          <li>承認フローがないので、見本のOK／NGを流用した</li>
+          <li>日付と金額の表記ルールがないため、行ごとに揺れた</li>
+          <li>「月10万円くらい」という今週のメモを、仕様として画面に出した</li>
+        </ul>
+      </article>
+
+      <article class="detail-card">
+        <h3>good側で起きたこと</h3>
+        <p>CLAUDE.mdに毎回効く定義だけがあると、AIは推測ではなく定義を参照して画面を組み立てます。</p>
+        <ul>
+          <li>カテゴリは5種に固定され、入力も一覧も同じ語彙になる</li>
+          <li>ステータスは4段階になり、承認フローとして読める</li>
+          <li>日付、金額、税込表記が全行で揃う</li>
+          <li>必須項目が明示され、未入力ボタンは無効になる</li>
+          <li>不明な外貨精算は勝手に決めず「要確認」と止める</li>
+        </ul>
+      </article>
+
+      <article class="detail-card wide">
+        <h3>CLAUDE.mdの行が、画面のどこに効いたか</h3>
+        <div class="map-grid">
+          <div class="map-head">観点</div><div class="map-head">定義がない場合</div><div class="map-head">定義がある場合</div>
+          <div>カテゴリ</div><div class="bad-note">交通、タクシー、移動費など、同じ意味の言葉が混在する</div><div class="good-note">交通費／接待費／消耗品費／通信費／その他だけに固定される</div>
+          <div>ステータス</div><div class="bad-note">OK／NGで止まり、申請中や差戻しが表現できない</div><div class="good-note">下書き → 申請中 → 承認済 → 差戻しの業務フローになる</div>
+          <div>表記</div><div class="bad-note">2026/7/2、7月2日、¥5000、5,000円が混ざる</div><div class="good-note">YYYY/MM/DD、3桁区切り、（税込）で読み間違いが減る</div>
+          <div>入力</div><div class="bad-note">空でも申請できそうに見える</div><div class="good-note">必須項目と無効ボタンで、未完成の申請を防ぐ</div>
+          <div>不明点</div><div class="bad-note">月10万円など、根拠のないルールを作ってしまう</div><div class="good-note">不明な仕様は要確認と表示し、人間に戻す</div>
+        </div>
+      </article>
+
+      <article class="detail-card wide">
+        <h3>講師メモ</h3>
+        <p>このデモで見せたいのは「赤いほうが見た目が良い」ではありません。CLAUDE.mdに定義があると、AIが推測で埋める余地が減り、同じ依頼でも業務ルールに沿った成果物になる、という点です。</p>
+      </article>
+    </div>
+  </section>
+
+  <div class="modal" id="toolModal" hidden data-view="desktop">
+    <div class="modal-bar">
+      <span id="modalTitle">完成ツール</span>
+      <div class="modal-controls">
+        <button class="modal-view" data-view="desktop">PC</button>
+        <button class="modal-view" data-view="mobile">スマホ</button>
+        <button class="modal-close" id="modalClose">閉じる</button>
+      </div>
+    </div>
+    <div class="modal-frame"><iframe id="modalFrame" title="完成ツールの拡大表示"></iframe></div>
+  </div>
+
+  <script>
+    const badClaude = `# 業務システム制作メモ
+
+## このフォルダの用途
+- 社内向けの小さな業務画面を素早く作るための作業場所
+- 見た目は分かりやすく、操作は簡単にする
+- 迷ったら以前の管理画面を参考にしてよい
+
+## 画面づくりの考え方
+- なるべく早く形にする
+- 使いやすく、でも必要な情報はしっかり出す
+- ラベルや項目名は画面に合わせて良い感じに調整する
+- ステータスは分かりやすければよい
+
+## 参考: inventory-dashboard-2024.html
+以下は以前作った在庫管理画面。社内ではこの雰囲気が見慣れている。
+
+\`\`\`html
+<body style="background:#0044cc">
+  <header>
+    <h1>在庫管理システム</h1>
+    <p>Inventory / Stock Control</p>
+  </header>
+  <section class="cards">
+    <div>Total Items</div>
+    <div>Stock Alert</div>
+    <div>Amount</div>
+  </section>
+  <table>
+    <tr>
+      <th>Date</th>
+      <th>Item</th>
+      <th>Category</th>
+      <th>Amount</th>
+      <th>在庫数</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>2024/08/01</td>
+      <td>コピー用紙</td>
+      <td>office</td>
+      <td>¥5000</td>
+      <td>12</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <td>8月2日</td>
+      <td>ボールペン</td>
+      <td>stationery</td>
+      <td>3,000円</td>
+      <td>0</td>
+      <td>NG</td>
+    </tr>
+  </table>
+  <form>
+    <input placeholder="Date">
+    <input placeholder="Item">
+    <input placeholder="Amount">
+    <button>登録</button>
+  </form>
+</body>
+\`\`\`
+
+## 今週だけの連絡
+- 金曜の部長レビューに間に合わせるため、細部よりスピードを優先
+- 金額が大きくなりすぎないよう、月10万円くらいを目安に見せる`;
+
+    const goodClaude = `# Zettai経費管理の制作ルール
+
+## 目的
+- 従業員が立て替えた経費を、申請・確認・承認できる業務SaaS画面を作る
+- 読み手は申請者、承認者、経理担当者
+- 画面名は「Zettai経費管理」で統一する
+
+## 用語の定義
+- カテゴリは5種のみ：交通費／接待費／消耗品費／通信費／その他
+- ステータスは4段階：下書き → 申請中 → 承認済 → 差戻し
+- 「領収書添付」は5,000円を超える経費だけ必要
+
+## 表記のルール
+- 日付は YYYY/MM/DD 形式で統一する
+- 金額は円・3桁区切りで「（税込）」を明記する
+- 画面文言は敬体。絵文字は使わない
+- 社内向けでも略語を避け、ラベルは日本語で統一する
+
+## 入力のルール
+- 必須項目は 日付・カテゴリ・金額・支払先
+- 未入力の間は申請ボタンを無効にする
+- 5,000円を超える経費は領収書添付欄を表示する
+
+## 画面設計のルール
+- PCは左ナビ、KPIカード、申請一覧、申請フォームを1画面に整理する
+- モバイルはカード型一覧に切り替え、重要な操作を下部に固定する
+- 色は赤（#cc0000）を主役にし、背景は淡いグレー、情報面は白で整理する
+- 重要な状態は色だけでなくラベル文字でも伝える
+
+## 判断に迷う場合
+- 仕様が不明な点は推測で補わず「要確認」と表示する`;
+
+    const data = {
+      bad: {
+        lines: badClaude.split("\n"),
+        logs: [
+          "依頼文を確認：経費管理ツールの画面",
+          "経費カテゴリの定義なし。既存見本から推測します",
+          "参考実装 inventory-dashboard-2024.html を検出",
+          "見本の列構成と #0044cc を採用します"
+        ],
+        reveal: [
+          ["1", "見本色", "在庫管理見本の background:#0044cc"],
+          ["2", "在庫数列", "古い見本の列が経費画面に混入"],
+          ["3", "OK／NG", "承認フロー定義がないので見本由来"],
+          ["4", "表記ゆれ", "カテゴリ・日付・金額の定義がない"],
+          ["5", "10万円上限", "今週だけのメモを仕様化してしまった"]
+        ],
+        html: badResult()
+      },
+      good: {
+        lines: goodClaude.split("\n"),
+        logs: [
+          "依頼文を確認：経費管理ツールの画面",
+          "カテゴリ定義を適用：5種のみ",
+          "ステータス定義を適用：4段階",
+          "不明な仕様は「要確認」と表示します"
+        ],
+        reveal: [
+          ["1", "主色", "表記ルール：メインカラー #cc0000"],
+          ["2", "カテゴリ5種", "用語の定義：5種のみ"],
+          ["3", "4段階", "用語の定義：ステータス4段階"],
+          ["4", "表記統一", "YYYY/MM/DD・円・（税込）"],
+          ["5", "要確認", "推測で補わない"]
+        ],
+        html: goodResult()
+      }
+    };
+
+    const state = {
+      bad: { token: 0, done: false },
+      good: { token: 0, done: false }
+    };
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function renderCode(target, lines) {
+      target.innerHTML = lines.map((line, index) => (
+        `<span class="code-line"><span class="ln">${index + 1}</span><span class="txt">${escapeHtml(line) || " "}</span></span>`
+      )).join("");
+    }
+
+    function renderReveal(kind) {
+      document.getElementById(`${kind}Reveal`).innerHTML = data[kind].reveal.map(item => (
+        `<div class="reveal-card"><span class="num">${item[0]}</span>${item[1]}<br>${item[2]}</div>`
+      )).join("");
+    }
+
+    function setPane(kind, paneState, label) {
+      document.querySelector(`[data-kind="${kind}"]`).dataset.state = paneState;
+      document.getElementById(`${kind}Status`).textContent = label;
+    }
+
+    function clearWire(kind) {
+      const wire = document.getElementById(`${kind}Wire`);
+      wire.classList.remove("painted");
+      wire.querySelectorAll(".skeleton").forEach(part => part.classList.remove("show"));
+    }
+
+    function setReadProgress(kind, count) {
+      const box = document.getElementById(`${kind}RunCode`);
+      const lines = [...box.querySelectorAll(".code-line")];
+      lines.forEach((line, index) => {
+        line.classList.toggle("read", index < count);
+        line.classList.toggle("focus", index === count - 1);
+      });
+      const focus = lines[count - 1];
+      if (focus) box.scrollTop = Math.max(0, focus.offsetTop - box.clientHeight / 2);
+    }
+
+    function addLog(kind, text) {
+      const log = document.getElementById(`${kind}Logs`);
+      const line = document.createElement("div");
+      line.className = "log-line";
+      line.textContent = `> ${text}`;
+      log.appendChild(line);
+    }
+
+    async function runPane(kind) {
+      state[kind].token += 1;
+      const token = state[kind].token;
+      state[kind].done = false;
+      document.getElementById(`${kind}Logs`).innerHTML = "";
+      renderCode(document.getElementById(`${kind}RunCode`), data[kind].lines);
+      clearWire(kind);
+      setPane(kind, "running", "読み込み中");
+
+      const total = data[kind].lines.length;
+      for (let i = 1; i <= total; i += 1) {
+        if (state[kind].token !== token) return;
+        setReadProgress(kind, i);
+        await sleep(1500 / total);
+      }
+
+      addLog(kind, "CLAUDE.md を読み込みました");
+      await sleep(250);
+      setPane(kind, "running", "思考中");
+
+      for (const line of data[kind].logs) {
+        if (state[kind].token !== token) return;
+        addLog(kind, line);
+        await sleep(330);
+      }
+
+      setPane(kind, "running", "組み上げ中");
+      for (const part of ["header", "cards", "table", "form"]) {
+        if (state[kind].token !== token) return;
+        document.querySelector(`#${kind}Wire [data-part="${part}"]`).classList.add("show");
+        await sleep(640);
+      }
+
+      if (state[kind].token !== token) return;
+      document.getElementById(`${kind}Wire`).classList.add("painted");
+      await sleep(420);
+      finishPane(kind);
+    }
+
+    function finishPane(kind) {
+      state[kind].token += 1;
+      state[kind].done = true;
+      const frame = document.getElementById(`${kind}Frame`);
+      frame.onload = () => updateFrameReveal(kind);
+      frame.srcdoc = data[kind].html;
+      setPane(kind, "done", "完成");
+      updateFrameReveal(kind);
+      updateSummary();
+    }
+
+    function resetPane(kind) {
+      state[kind].token += 1;
+      state[kind].done = false;
+      document.getElementById(`${kind}Logs`).innerHTML = "";
+      document.getElementById(`${kind}Frame`).srcdoc = "";
+      clearWire(kind);
+      setPane(kind, "idle", "待機中");
+    }
+
+    function resetAll() {
+      resetPane("bad");
+      resetPane("good");
+      closeTool();
+      closeDetail();
+      document.getElementById("detailLaunch").hidden = true;
+      document.getElementById("revealToggle").checked = false;
+      document.body.classList.remove("show-reveal");
+    }
+
+    function updateSummary() {
+      const done = state.bad.done && state.good.done;
+      document.getElementById("detailLaunch").hidden = !done;
+    }
+
+    function updateFrameReveal(kind) {
+      const frame = document.getElementById(`${kind}Frame`);
+      if (!frame.contentDocument) return;
+      frame.contentDocument.body.classList.toggle("show-reveal", document.getElementById("revealToggle").checked);
+      const modalFrame = document.getElementById("modalFrame");
+      if (modalFrame.contentDocument) {
+        modalFrame.contentDocument.body.classList.toggle("show-reveal", document.getElementById("revealToggle").checked);
+      }
+    }
+
+    function updateAllReveal() {
+      const show = document.getElementById("revealToggle").checked;
+      document.body.classList.toggle("show-reveal", show);
+      updateFrameReveal("bad");
+      updateFrameReveal("good");
+    }
+
+    function openTool(kind) {
+      const modal = document.getElementById("toolModal");
+      const frame = document.getElementById("modalFrame");
+      modal.dataset.kind = kind;
+      modal.dataset.view = "desktop";
+      document.getElementById("modalTitle").textContent = kind === "good" ? "Zettai経費管理" : "定義がないCLAUDE.mdで作成した画面";
+      frame.onload = () => {
+        if (frame.contentDocument) {
+          frame.contentDocument.body.classList.toggle("show-reveal", document.getElementById("revealToggle").checked);
+        }
+      };
+      frame.srcdoc = data[kind].html;
+      modal.hidden = false;
+    }
+
+    function closeTool() {
+      document.getElementById("toolModal").hidden = true;
+      document.getElementById("modalFrame").srcdoc = "";
+    }
+
+    function setModalView(view) {
+      document.getElementById("toolModal").dataset.view = view;
+    }
+
+    function openDetail() {
+      document.getElementById("detailPage").hidden = false;
+    }
+
+    function closeDetail() {
+      document.getElementById("detailPage").hidden = true;
+    }
+
+    function badResult() {
+      return resultPage({
+        kind: "bad",
+        color: "#0044cc",
+        title: "業務管理システム 💰",
+        subtitle: "Expense / Stock Control",
+        cards: ["Total 6件", "Amount ¥42,900", "Stock Alert 2"],
+        headers: ["Date", "Item", "Category", "Amount", "在庫数", "Status"],
+        rows: [
+          ["2026/7/2", "JR立替", "交通", "¥5000", "12", "OK"],
+          ["7月2日", "タクシー", "タクシー", "8,800円", "0", "NG"],
+          ["07-03", "会食", "接待", "12,300円", "5", "OK"],
+          ["2026.7.3", "携帯代", "通信", "¥3200", "3", "OK"],
+          ["7/4", "ノート", "消耗品", "900円", "24", "NG"],
+          ["2026-07-05", "出張移動", "移動費", "¥12700", "1", "OK"]
+        ],
+        formNote: "Date / Item / Amount は空でも申請できます。",
+        note: "※月の上限は10万円です。超える場合は事前相談してください。",
+        tags: { bg: "1", inventory: "2", status: "3", mixed: "4", note: "5" }
+      });
+    }
+
+    function goodResult() {
+      return goodToolPage({
+        kind: "good",
+        color: "#cc0000",
+        title: "Zettai経費管理",
+        subtitle: "立替経費の申請、承認状況、領収書添付をひとつの画面で確認できます。",
+        cards: ["今月の申請 6件", "合計 42,900円（税込）", "承認済 2件", "領収書添付 3件"],
+        headers: ["日付", "支払先", "カテゴリ", "金額", "領収書添付", "ステータス"],
+        rows: [
+          ["2026/07/02", "JR東日本", "交通費", "5,000円（税込）", "-", "下書き"],
+          ["2026/07/02", "東京交通", "交通費", "8,800円（税込）", "必要", "申請中"],
+          ["2026/07/03", "青山会館", "接待費", "12,300円（税込）", "必要", "承認済"],
+          ["2026/07/03", "携帯通信", "通信費", "3,200円（税込）", "-", "承認済"],
+          ["2026/07/04", "文具店", "消耗品費", "900円（税込）", "-", "差戻し"],
+          ["2026/07/05", "出張立替", "その他", "12,700円（税込）", "必要", "申請中"]
+        ],
+        formNote: "日付・カテゴリ・金額・支払先は必須です。未入力のため申請ボタンは無効です。",
+        note: "外貨での立替は要確認です。",
+        tags: { bg: "1", category: "2", status: "3", mixed: "4", note: "5" }
+      });
+    }
+
+    function goodToolPage(page) {
+      const tag = (number, className) => number ? `<span class="tag ${className}">${number}</span>` : "";
+      const statusClass = { "下書き": "draft", "申請中": "pending", "承認済": "approved", "差戻し": "rejected" };
+      const rows = page.rows.map(row => `<tr>
+        <td data-label="日付">${row[0]}</td>
+        <td data-label="支払先"><strong>${row[1]}</strong></td>
+        <td data-label="カテゴリ"><span class="pill category">${row[2]}</span></td>
+        <td data-label="金額" class="amount">${row[3]}</td>
+        <td data-label="領収書">${row[4] === "必要" ? `<span class="receipt">必要</span>` : "-"}</td>
+        <td data-label="ステータス"><span class="pill ${statusClass[row[5]]}">${row[5]}</span></td>
+      </tr>`).join("");
+
+      return `<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif; color: #172033; background: #f5f6fa; }
+    button, input, select { font: inherit; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 232px minmax(0, 1fr); background: #f5f6fa; }
+    .sidebar { display: grid; grid-template-rows: auto 1fr auto; gap: 18px; padding: 18px 14px; background: #14171f; color: #fff; }
+    .brand { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; padding: 0 4px 14px; border-bottom: 1px solid rgba(255,255,255,.12); }
+    .mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: #cc0000; font-size: 18px; font-weight: 950; }
+    .brand strong { display: block; font-size: 17px; line-height: 1.15; }
+    .brand span { color: #c7ccd7; font-size: 12px; font-weight: 850; }
+    .nav { display: grid; align-content: start; gap: 7px; }
+    .nav button { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: flex-start; gap: 9px; border: 0; border-radius: 7px; padding: 0 10px; background: transparent; color: #c7ccd7; font-size: 13px; font-weight: 950; cursor: pointer; }
+    .nav button.active { background: #cc0000; color: #fff; }
+    .side-note { padding: 12px; border-radius: 8px; background: rgba(255,255,255,.08); color: #e8ebf0; font-size: 12px; font-weight: 850; line-height: 1.45; }
+    .overlay { display: none; }
+    .main { min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; padding: 22px; position: relative; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: relative; }
+    .top-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .hamburger { display: none; width: 42px; min-width: 42px; height: 42px; padding: 0; border: 1px solid #d6dce7; border-radius: 8px; background: #fff; place-items: center; cursor: pointer; }
+    .hamburger span { display: block; width: 18px; height: 2px; margin: 3px 0; border-radius: 999px; background: #172033; }
+    h1 { margin: 0 0 4px; font-size: 30px; line-height: 1.15; letter-spacing: 0; }
+    .sub { margin: 0; color: #687386; font-size: 13px; font-weight: 850; }
+    .top-actions { display: flex; gap: 8px; }
+    .btn { min-height: 36px; padding: 0 14px; border-radius: 7px; border: 1px solid #d6dce7; background: #fff; color: #172033; font-weight: 950; cursor: pointer; }
+    .primary { border-color: #cc0000; background: #cc0000; color: #fff; }
+    .screen { display: none; min-height: 0; }
+    .screen.active { display: grid; gap: 16px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .metric { min-height: 94px; padding: 15px; border: 1px solid #e0e5ee; border-radius: 8px; background: #fff; box-shadow: 0 10px 24px rgba(17,24,39,.05); }
+    .metric span { color: #687386; font-size: 12px; font-weight: 950; }
+    .metric strong { display: block; margin-top: 8px; font-size: 24px; line-height: 1; }
+    .metric em { display: block; margin-top: 8px; color: #15803d; font-size: 12px; font-style: normal; font-weight: 950; }
+    .workspace { min-height: 0; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(330px, .82fr); gap: 14px; }
+    .panel, .form-panel, .card { border: 1px solid #e0e5ee; border-radius: 8px; background: #fff; box-shadow: 0 10px 24px rgba(17,24,39,.05); }
+    .panel { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 14px; border-bottom: 1px solid #edf0f5; }
+    .panel-title { margin: 0; font-size: 16px; font-weight: 950; }
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .filter { padding: 5px 8px; border-radius: 999px; background: #f2f4f8; color: #4b5563; font-size: 12px; font-weight: 950; }
+    .filter.on { background: #fff0f0; color: #cc0000; }
+    .table-wrap { min-height: 0; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { position: relative; padding: 10px 12px; border-bottom: 1px solid #edf0f5; text-align: left; white-space: nowrap; }
+    th { background: #fafbfe; color: #687386; font-size: 12px; font-weight: 950; }
+    .amount { font-weight: 950; }
+    .pill { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 950; }
+    .category { background: #fff0f0; color: #cc0000; }
+    .draft { background: #eef2f7; color: #4b5563; }
+    .pending { background: #fff2cc; color: #815800; }
+    .approved { background: #e9f8ed; color: #176a2e; }
+    .rejected { background: #ffe6e6; color: #9b1c1c; }
+    .receipt { color: #cc0000; font-weight: 950; }
+    .form-panel { min-height: 0; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 12px; padding: 14px; color: #172033; position: relative; }
+    .form-title { margin: 0; font-size: 16px; font-weight: 950; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; position: relative; }
+    label { display: grid; gap: 5px; color: #4b5563; font-size: 12px; font-weight: 950; }
+    label.wide { grid-column: 1 / -1; }
+    b { color: #cc0000; }
+    input, select { width: 100%; height: 34px; border: 1px solid #d6dce7; border-radius: 7px; padding: 5px 8px; background: #fff; color: #172033; font-weight: 850; }
+    .disabled { width: 100%; min-height: 36px; border: 0; border-radius: 7px; background: #9aa3b2; color: #fff; font-weight: 950; }
+    .callout { margin: 0; padding: 10px; border: 1px solid #f0d48a; border-radius: 8px; background: #fff8df; color: #634600; font-size: 12px; font-weight: 900; line-height: 1.45; position: relative; }
+    .timeline { display: grid; align-content: start; gap: 8px; padding-top: 2px; overflow: auto; }
+    .step { display: grid; grid-template-columns: 10px 1fr; gap: 8px; color: #4b5563; font-size: 12px; font-weight: 900; }
+    .dot { width: 10px; height: 10px; margin-top: 4px; border-radius: 999px; background: #cc0000; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { padding: 14px; }
+    .card h2, .card h3 { margin: 0 0 8px; font-size: 17px; }
+    .card p { margin: 0; color: #566173; font-size: 13px; font-weight: 850; line-height: 1.5; }
+    .approval-list { display: grid; gap: 10px; }
+    .approval { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 12px; border: 1px solid #edf0f5; border-radius: 8px; background: #fff; }
+    .approval strong { display: block; margin-bottom: 4px; }
+    .approval-actions { display: flex; align-items: center; gap: 6px; }
+    .mini-btn { min-height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid #d6dce7; background: #fff; font-weight: 950; }
+    .bars { display: grid; gap: 11px; }
+    .bar { display: grid; grid-template-columns: 90px 1fr 90px; gap: 10px; align-items: center; font-size: 13px; font-weight: 900; }
+    .track { height: 10px; border-radius: 999px; background: #edf0f5; overflow: hidden; }
+    .fill { height: 100%; border-radius: inherit; background: #cc0000; }
+    .settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .policy { min-height: 150px; padding: 14px; border: 1px solid #e0e5ee; border-radius: 8px; background: #fff; }
+    .policy h3 { margin: 0 0 8px; font-size: 16px; }
+    .policy ul { margin: 0; padding-left: 18px; color: #3b4351; font-size: 13px; font-weight: 850; line-height: 1.6; }
+    .mobile-action { display: none; }
+    .tag { display: none; position: absolute; z-index: 6; width: 26px; height: 26px; place-items: center; border-radius: 999px; border: 2px solid #111827; background: #fff7ba; color: #111827; font-size: 14px; font-weight: 950; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+    body.show-reveal .tag { display: grid; }
+    .t-bg { right: 12px; top: 12px; }
+    .t-category, .t-status { right: -9px; top: -9px; }
+    .t-format { right: 12px; top: -10px; }
+    .t-note { right: 10px; top: -10px; }
+    @media (max-width: 760px) {
+      body { background: #f5f6fa; }
+      .app { display: block; min-height: 100vh; padding-bottom: 74px; }
+      .hamburger { display: grid; }
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 20; width: 286px; transform: translateX(-102%); transition: transform 180ms ease; box-shadow: 18px 0 46px rgba(17,24,39,.36); }
+      body.menu-open .sidebar { transform: translateX(0); }
+      .overlay { position: fixed; inset: 0; z-index: 19; display: none; background: rgba(17,24,39,.48); }
+      body.menu-open .overlay { display: block; }
+      .main { display: block; padding: 14px; }
+      .topbar { align-items: flex-start; margin-bottom: 12px; }
+      h1 { font-size: 24px; }
+      .top-actions { display: none; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+      .metric { min-height: 78px; padding: 11px; }
+      .metric strong { font-size: 20px; }
+      .workspace, .grid-2, .settings { display: block; }
+      .panel, .form-panel, .card, .policy { margin-bottom: 12px; }
+      .panel { display: block; overflow: visible; }
+      .panel-head { display: grid; gap: 10px; }
+      .filters { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+      .filter { flex: 0 0 auto; }
+      .table-wrap { overflow: visible; }
+      table, thead, tbody, tr, td { display: block; }
+      thead { display: none; }
+      tr { margin: 10px; padding: 8px 10px; border: 1px solid #e0e5ee; border-radius: 10px; background: #fff; }
+      td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #edf0f5; white-space: normal; }
+      td:last-child { border-bottom: 0; }
+      td::before { content: attr(data-label); color: #687386; font-size: 12px; font-weight: 950; }
+      .form-panel { display: block; padding: 13px; }
+      .form-title, .form-grid, .disabled, .callout { margin-bottom: 12px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .timeline { display: none; }
+      .approval { grid-template-columns: 1fr; }
+      .approval-actions { justify-content: stretch; }
+      .approval-actions .mini-btn { flex: 1; }
+      .bar { grid-template-columns: 72px 1fr; }
+      .bar strong { grid-column: 2; }
+      .mobile-action { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 8; display: block; padding: 12px; border: 1px solid #e0e5ee; border-radius: 14px; background: rgba(255,255,255,.96); box-shadow: 0 12px 34px rgba(17,24,39,.22); }
+      .mobile-action button { width: 100%; height: 42px; border-color: #cc0000; background: #cc0000; color: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="overlay" id="overlay"></div>
+    <aside class="sidebar">
+      <div class="brand"><div class="mark">Z</div><div><strong>Zettai経費管理</strong><span>Expense Operations</span></div></div>
+      <nav class="nav">
+        <button class="active" data-nav="expenses">経費申請</button>
+        <button data-nav="approvals">承認待ち</button>
+        <button data-nav="reports">レポート</button>
+        <button data-nav="settings">設定</button>
+      </nav>
+      <div class="side-note">CLAUDE.mdの定義に沿って、カテゴリ・表記・承認状態を固定しています。</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        ${tag(page.tags.bg, "t-bg")}
+        <div class="top-left">
+          <button class="hamburger" id="menuButton" aria-label="メニューを開く"><span></span><span></span><span></span></button>
+          <div><h1 id="screenTitle">${page.title}</h1><p class="sub" id="screenSub">${page.subtitle}</p></div>
+        </div>
+        <div class="top-actions"><button class="btn">下書き保存</button><button class="btn primary" data-nav="expenses">新規申請</button></div>
+      </header>
+
+      <section class="screen active" data-screen="expenses">
+        <section class="metrics">
+          <article class="metric"><span>今月の申請</span><strong>6件</strong><em>前月比 +2件</em></article>
+          <article class="metric"><span>申請金額</span><strong>42,900円</strong><em>すべて税込</em></article>
+          <article class="metric"><span>承認済</span><strong>2件</strong><em>処理率 33%</em></article>
+          <article class="metric"><span>領収書添付</span><strong>3件</strong><em>5,000円超のみ</em></article>
+        </section>
+        <section class="workspace">
+          <section class="panel">
+            <div class="panel-head"><p class="panel-title">経費一覧</p><div class="filters"><span class="filter on">全件</span><span class="filter">申請中</span><span class="filter">承認済</span><span class="filter">差戻し</span></div></div>
+            <div class="table-wrap"><table><thead><tr><th>日付</th><th>支払先</th><th>カテゴリ${tag(page.tags.category, "t-category")}</th><th>金額${tag(page.tags.mixed, "t-format")}</th><th>領収書</th><th>ステータス${tag(page.tags.status, "t-status")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+          </section>
+          <aside class="form-panel">
+            <p class="form-title">新規申請</p>
+            <div class="form-grid"><label>日付 <b>必須</b><input value=""></label><label>カテゴリ <b>必須</b><select><option>交通費</option><option>接待費</option><option>消耗品費</option><option>通信費</option><option>その他</option></select></label><label>金額 <b>必須</b><input value=""></label><label>支払先 <b>必須</b><input value=""></label><label class="wide">領収書添付<input value="5,000円超で表示"></label></div>
+            <button class="disabled">未入力のため申請できません</button>
+            <p class="callout">外貨での立替は要確認です。${tag(page.tags.note, "t-note")}</p>
+            <div class="timeline"><div class="step"><span class="dot"></span><span>下書き：申請者が入力中です。</span></div><div class="step"><span class="dot"></span><span>申請中：承認者の確認待ちです。</span></div><div class="step"><span class="dot"></span><span>承認済：精算対象として確定します。</span></div><div class="step"><span class="dot"></span><span>差戻し：申請者が修正します。</span></div></div>
+          </aside>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="approvals">
+        <section class="metrics"><article class="metric"><span>承認待ち</span><strong>2件</strong><em>本日中に処理</em></article><article class="metric"><span>合計金額</span><strong>21,500円</strong><em>税込</em></article><article class="metric"><span>領収書確認</span><strong>2件</strong><em>添付済み</em></article><article class="metric"><span>差戻し候補</span><strong>0件</strong><em>要確認なし</em></article></section>
+        <div class="grid-2">
+          <section class="card"><h2>承認キュー</h2><div class="approval-list"><div class="approval"><div><strong>東京交通 8,800円（税込）</strong><p>交通費 / 領収書添付あり / 2026/07/02</p></div><div class="approval-actions"><button class="mini-btn primary">承認</button><button class="mini-btn">差戻し</button></div></div><div class="approval"><div><strong>出張立替 12,700円（税込）</strong><p>その他 / 領収書添付あり / 2026/07/05</p></div><div class="approval-actions"><button class="mini-btn primary">承認</button><button class="mini-btn">差戻し</button></div></div></div></section>
+          <section class="card"><h2>承認ルール</h2><p>5,000円を超える申請は領収書添付を確認します。カテゴリは5種のみ、外貨立替は要確認として経理へ戻します。</p></section>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="reports">
+        <section class="metrics"><article class="metric"><span>今月合計</span><strong>42,900円</strong><em>税込</em></article><article class="metric"><span>最大カテゴリ</span><strong>接待費</strong><em>12,300円</em></article><article class="metric"><span>平均申請額</span><strong>7,150円</strong><em>6件平均</em></article><article class="metric"><span>要確認</span><strong>1件</strong><em>外貨立替</em></article></section>
+        <div class="grid-2"><section class="card"><h2>カテゴリ別利用額</h2><div class="bars"><div class="bar"><span>交通費</span><div class="track"><div class="fill" style="width:32%"></div></div><strong>13,800円</strong></div><div class="bar"><span>接待費</span><div class="track"><div class="fill" style="width:29%"></div></div><strong>12,300円</strong></div><div class="bar"><span>その他</span><div class="track"><div class="fill" style="width:30%"></div></div><strong>12,700円</strong></div><div class="bar"><span>通信費</span><div class="track"><div class="fill" style="width:8%"></div></div><strong>3,200円</strong></div></div></section><section class="card"><h2>経理メモ</h2><p>今月は5,000円超の申請が3件あります。いずれも領収書添付が必要です。外貨立替の扱いは要確認として別途ルール化してください。</p></section></div>
+      </section>
+
+      <section class="screen" data-screen="settings">
+        <section class="settings"><article class="policy"><h3>カテゴリ定義</h3><ul><li>交通費</li><li>接待費</li><li>消耗品費</li><li>通信費</li><li>その他</li></ul></article><article class="policy"><h3>ステータス</h3><ul><li>下書き</li><li>申請中</li><li>承認済</li><li>差戻し</li></ul></article><article class="policy"><h3>入力ルール</h3><ul><li>日付・カテゴリ・金額・支払先は必須</li><li>5,000円超は領収書添付</li><li>不明点は要確認</li></ul></article></section>
+      </section>
+
+      <div class="mobile-action"><button data-nav="expenses">新規申請を開始</button></div>
+    </main>
+  </div>
+  <script>
+    const titles = {
+      expenses: ["Zettai経費管理", "立替経費の申請、承認状況、領収書添付をひとつの画面で確認できます。"],
+      approvals: ["承認待ち", "申請中の経費を確認し、承認または差戻しできます。"],
+      reports: ["レポート", "カテゴリ別の利用額と要確認事項を確認できます。"],
+      settings: ["設定", "CLAUDE.mdで定義したカテゴリ、ステータス、入力ルールを確認できます。"]
+    };
+    function showScreen(name) {
+      document.querySelectorAll("[data-screen]").forEach(el => el.classList.toggle("active", el.dataset.screen === name));
+      document.querySelectorAll("[data-nav]").forEach(el => el.classList.toggle("active", el.dataset.nav === name));
+      document.getElementById("screenTitle").textContent = titles[name][0];
+      document.getElementById("screenSub").textContent = titles[name][1];
+      document.body.classList.remove("menu-open");
+    }
+    document.querySelectorAll("[data-nav]").forEach(el => el.addEventListener("click", () => showScreen(el.dataset.nav)));
+    document.getElementById("menuButton").addEventListener("click", () => document.body.classList.add("menu-open"));
+    document.getElementById("overlay").addEventListener("click", () => document.body.classList.remove("menu-open"));
+  </script>
+</body>
+</html>`;
+    }
+
+    function resultPage(page) {
+      const good = page.kind === "good";
+      const tag = (number, className) => number ? `<span class="tag ${className}">${number}</span>` : "";
+      const heads = page.headers.map((text, index) => {
+        const marker = index === 2 ? page.tags.category : index === 4 ? page.tags.inventory : index === 5 ? page.tags.status : "";
+        return `<th>${text}${tag(marker, "t-cell")}</th>`;
+      }).join("");
+      const body = page.rows.map(row => `<tr>${row.map((cell, index) => {
+        let content = cell;
+        if (good && index === 2) content = `<span class="pill category">${cell}</span>`;
+        if (index === 5) {
+          const cls = good
+            ? { "下書き": "draft", "申請中": "pending", "承認済": "approved", "差戻し": "rejected" }[cell]
+            : cell === "OK" ? "approved" : "rejected";
+          content = `<span class="pill ${cls}">${cell}</span>`;
+        }
+        const markMixed = !good && (index === 0 || index === 2 || index === 3);
+        return `<td class="${markMixed ? "mixed" : ""}">${content}</td>`;
+      }).join("")}</tr>`).join("");
+      const fields = good
+        ? `<label>日付 <b>必須</b><input value=""></label><label>カテゴリ <b>必須</b><select><option>交通費</option><option>接待費</option><option>消耗品費</option><option>通信費</option><option>その他</option></select></label><label>金額 <b>必須</b><input value=""></label><label>支払先 <b>必須</b><input value=""></label><label>領収書添付<input value="5,000円超で表示"></label><button disabled>申請する</button>`
+        : `<label>Date<input value=""></label><label>Item<input value=""></label><label>Category<input value=""></label><label>Amount<input value=""></label><button>申請</button>`;
+
+      return `<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+    }
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      background: #f5f7fb;
+      border-top: 10px solid ${page.color};
+    }
+    header {
+      position: relative;
+      padding: 15px 18px;
+      background: ${page.color};
+      color: #fff;
+    }
+    h1 {
+      position: relative;
+      margin: 0 0 4px;
+      font-size: 26px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    .sub {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      opacity: .92;
+    }
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      gap: 11px;
+      padding: 13px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+    .card {
+      min-height: 54px;
+      padding: 10px 12px;
+      border: 1px solid #dce2ee;
+      border-radius: 8px;
+      background: #fff;
+      color: ${page.color};
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .table-wrap {
+      min-height: 0;
+      overflow: auto;
+      border: 1px solid #dce2ee;
+      border-radius: 8px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      position: relative;
+      padding: 8px 9px;
+      border-bottom: 1px solid #e5eaf3;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      background: #eef2f8;
+      font-weight: 900;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .category { background: #fff0f0; color: ${page.color}; }
+    .draft { background: #edf1f7; color: #4b5563; }
+    .pending { background: #fff2cc; color: #815800; }
+    .approved { background: #e9f8ed; color: #176a2e; }
+    .rejected { background: #ffe6e6; color: #9b1c1c; }
+    form {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(${good ? 5 : 4}, minmax(0, 1fr)) auto;
+      gap: 8px;
+      padding: 11px;
+      border: 1px solid #dce2ee;
+      border-radius: 8px;
+      background: #fff;
+    }
+    label {
+      display: grid;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    b { color: ${page.color}; }
+    input, select {
+      width: 100%;
+      min-width: 0;
+      height: 31px;
+      border: 1px solid #cbd3df;
+      border-radius: 6px;
+      padding: 4px 7px;
+      background: #fff;
+    }
+    button {
+      align-self: end;
+      height: 31px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 14px;
+      background: ${page.color};
+      color: #fff;
+      font-weight: 900;
+    }
+    button:disabled { background: #9aa3b2; }
+    .form-note, .note {
+      grid-column: 1 / -1;
+      position: relative;
+      margin: 0;
+      color: #465266;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .note {
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid #dfc95c;
+      background: #fff8d7;
+    }
+    .tag {
+      display: none;
+      position: absolute;
+      z-index: 6;
+      width: 26px;
+      height: 26px;
+      place-items: center;
+      border-radius: 999px;
+      border: 2px solid #111827;
+      background: #fff7ba;
+      color: #111827;
+      font-size: 14px;
+      font-weight: 900;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    body.show-reveal .tag { display: grid; }
+    .t-bg { right: 12px; top: 12px; }
+    .t-cell { right: -10px; top: -10px; }
+    .t-mixed { right: 12px; top: -10px; }
+    .t-note { right: 10px; top: -10px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>${tag(page.tags.bg, "t-bg")}<h1>${page.title}</h1><p class="sub">${page.subtitle}</p></header>
+    <main>
+      <section class="cards">${page.cards.map(card => `<div class="card">${card}</div>`).join("")}</section>
+      <section class="table-wrap"><table><thead><tr>${heads}</tr></thead><tbody>${body}</tbody></table></section>
+      <form>${fields}<p class="form-note">${page.formNote}${tag(page.tags.mixed, "t-mixed")}</p></form>
+      <p class="note">${page.note}${tag(page.tags.note, "t-note")}</p>
+    </main>
+  </div>
+</body>
+</html>`;
+    }
+
+    renderCode(document.getElementById("badIdleCode"), data.bad.lines);
+    renderCode(document.getElementById("goodIdleCode"), data.good.lines);
+    renderReveal("bad");
+    renderReveal("good");
+
+    document.querySelectorAll(".run-one").forEach(button => {
+      button.addEventListener("click", () => runPane(button.dataset.run));
+    });
+
+    document.querySelectorAll("[data-skip]").forEach(area => {
+      area.addEventListener("click", () => finishPane(area.dataset.skip));
+    });
+
+    document.getElementById("runBoth").addEventListener("click", () => {
+      runPane("bad");
+      runPane("good");
+    });
+
+    document.getElementById("resetAll").addEventListener("click", resetAll);
+    document.getElementById("revealToggle").addEventListener("change", updateAllReveal);
+    document.getElementById("modalClose").addEventListener("click", closeTool);
+    document.getElementById("detailOpen").addEventListener("click", openDetail);
+    document.getElementById("detailClose").addEventListener("click", closeDetail);
+
+    document.querySelectorAll("[data-open-tool]").forEach(button => {
+      button.addEventListener("click", () => openTool(button.dataset.openTool));
+    });
+
+    document.querySelectorAll(".modal-view").forEach(button => {
+      button.addEventListener("click", () => setModalView(button.dataset.view));
+    });
+
+    document.addEventListener("keydown", event => {
+      const key = event.key.toLowerCase();
+      if (key === "escape") {
+        closeTool();
+        closeDetail();
+      }
+      if (key === " " && !event.repeat) {
+        event.preventDefault();
+        runPane("bad");
+        runPane("good");
+      }
+      if (key === "r" && !event.repeat) resetAll();
+    });
+  </script>
+</body>
+</html>
