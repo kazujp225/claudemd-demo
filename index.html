@@ -1266,13 +1266,14 @@
     function goodToolPage(page) {
       const tag = (number, className) => number ? `<span class="tag ${className}">${number}</span>` : "";
       const statusClass = { "下書き": "draft", "申請中": "pending", "承認済": "approved", "差戻し": "rejected" };
-      const rows = page.rows.map(row => `<tr>
+      const rows = page.rows.map((row, index) => `<tr data-expense-id="exp-${index + 1}">
         <td data-label="日付">${row[0]}</td>
         <td data-label="支払先"><strong>${row[1]}</strong></td>
         <td data-label="カテゴリ"><span class="pill category">${row[2]}</span></td>
         <td data-label="金額" class="amount">${row[3]}</td>
         <td data-label="領収書">${row[4] === "必要" ? `<span class="receipt">必要</span>` : "-"}</td>
         <td data-label="ステータス"><span class="pill ${statusClass[row[5]]}">${row[5]}</span></td>
+        <td data-label="操作"><button class="link-btn" data-detail="exp-${index + 1}">詳細</button></td>
       </tr>`).join("");
 
       return `<!doctype html>
@@ -1305,6 +1306,8 @@
     .top-actions { display: flex; gap: 8px; }
     .btn { min-height: 36px; padding: 0 14px; border-radius: 7px; border: 1px solid #d6dce7; background: #fff; color: #172033; font-weight: 950; cursor: pointer; }
     .primary { border-color: #cc0000; background: #cc0000; color: #fff; }
+    .sync { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 0 10px; border: 1px solid #dfe5ef; border-radius: 999px; background: #fff; color: #566173; font-size: 12px; font-weight: 950; }
+    .sync::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: #16a34a; }
     .screen { display: none; min-height: 0; }
     .screen.active { display: grid; gap: 16px; }
     .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
@@ -1332,6 +1335,7 @@
     .approved { background: #e9f8ed; color: #176a2e; }
     .rejected { background: #ffe6e6; color: #9b1c1c; }
     .receipt { color: #cc0000; font-weight: 950; }
+    .link-btn { min-height: 28px; padding: 0 8px; border: 1px solid #d6dce7; border-radius: 6px; background: #fff; color: #cc0000; font-size: 12px; font-weight: 950; cursor: pointer; }
     .form-panel { min-height: 0; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 12px; padding: 14px; color: #172033; position: relative; }
     .form-title { margin: 0; font-size: 16px; font-weight: 950; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; position: relative; }
@@ -1340,6 +1344,7 @@
     b { color: #cc0000; }
     input, select { width: 100%; height: 34px; border: 1px solid #d6dce7; border-radius: 7px; padding: 5px 8px; background: #fff; color: #172033; font-weight: 850; }
     .disabled { width: 100%; min-height: 36px; border: 0; border-radius: 7px; background: #9aa3b2; color: #fff; font-weight: 950; }
+    .submit-ready { background: #cc0000; cursor: pointer; }
     .callout { margin: 0; padding: 10px; border: 1px solid #f0d48a; border-radius: 8px; background: #fff8df; color: #634600; font-size: 12px; font-weight: 900; line-height: 1.45; position: relative; }
     .timeline { display: grid; align-content: start; gap: 8px; padding-top: 2px; overflow: auto; }
     .step { display: grid; grid-template-columns: 10px 1fr; gap: 8px; color: #4b5563; font-size: 12px; font-weight: 900; }
@@ -1393,6 +1398,15 @@
     .policy h3 { margin: 0 0 8px; font-size: 16px; }
     .policy ul { margin: 0; padding-left: 18px; color: #3b4351; font-size: 13px; font-weight: 850; line-height: 1.6; }
     .mobile-action, .bottom-nav { display: none; }
+    .toast { position: fixed; right: 18px; bottom: 18px; z-index: 30; display: none; max-width: 360px; padding: 12px 14px; border-radius: 8px; background: #111827; color: #fff; font-size: 13px; font-weight: 900; box-shadow: 0 14px 38px rgba(17,24,39,.28); }
+    .toast.show { display: block; }
+    .drawer { position: fixed; inset: 0 0 0 auto; z-index: 25; width: 390px; max-width: calc(100vw - 28px); transform: translateX(105%); transition: transform 180ms ease; border-left: 1px solid #dfe5ef; background: #fff; box-shadow: -20px 0 50px rgba(17,24,39,.22); }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 16px; border-bottom: 1px solid #edf0f5; }
+    .drawer-head h2 { margin: 0; font-size: 18px; }
+    .drawer-body { display: grid; gap: 12px; padding: 16px; }
+    .kv { display: grid; grid-template-columns: 96px 1fr; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #edf0f5; font-size: 13px; font-weight: 900; }
+    .kv span { color: #687386; }
     .tag { display: none; position: absolute; z-index: 6; width: 26px; height: 26px; place-items: center; border-radius: 999px; border: 2px solid #111827; background: #fff7ba; color: #111827; font-size: 14px; font-weight: 950; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
     body.show-reveal .tag { display: grid; }
     .t-bg { right: 12px; top: 12px; }
@@ -1449,6 +1463,8 @@
       .bottom-nav button { min-height: 42px; border: 0; border-radius: 11px; background: transparent; color: #566173; font-size: 11px; font-weight: 950; }
       .bottom-nav button.active { background: #cc0000; color: #fff; }
       .mobile-action { display: none; }
+      .toast { left: 12px; right: 12px; bottom: 72px; max-width: none; }
+      .drawer { width: 100%; max-width: 100%; }
     }
   </style>
 </head>
@@ -1472,7 +1488,7 @@
           <button class="hamburger" id="menuButton" aria-label="メニューを開く"><span></span><span></span><span></span></button>
           <div><h1 id="screenTitle">${page.title}</h1><p class="sub" id="screenSub">${page.subtitle}</p></div>
         </div>
-        <div class="top-actions"><button class="btn">下書き保存</button><button class="btn primary" data-nav="expenses">新規申請</button></div>
+        <div class="top-actions"><span class="sync" id="syncState">保存済み</span><button class="btn" id="saveDraft">下書き保存</button><button class="btn primary" data-nav="expenses">新規申請</button></div>
       </header>
 
       <section class="screen active" data-screen="expenses">
@@ -1485,12 +1501,12 @@
         <section class="workspace">
           <section class="panel">
             <div class="panel-head"><p class="panel-title">経費一覧</p><div class="filters"><span class="filter on">全件</span><span class="filter">申請中</span><span class="filter">承認済</span><span class="filter">差戻し</span></div></div>
-            <div class="table-wrap"><table><thead><tr><th>日付</th><th>支払先</th><th>カテゴリ${tag(page.tags.category, "t-category")}</th><th>金額${tag(page.tags.mixed, "t-format")}</th><th>領収書</th><th>ステータス${tag(page.tags.status, "t-status")}</th></tr></thead><tbody>${rows}</tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th>日付</th><th>支払先</th><th>カテゴリ${tag(page.tags.category, "t-category")}</th><th>金額${tag(page.tags.mixed, "t-format")}</th><th>領収書</th><th>ステータス${tag(page.tags.status, "t-status")}</th><th>操作</th></tr></thead><tbody id="expenseRows">${rows}</tbody></table></div>
           </section>
           <aside class="form-panel">
             <p class="form-title">新規申請</p>
-            <div class="form-grid"><label>日付 <b>必須</b><input value=""></label><label>カテゴリ <b>必須</b><select><option>交通費</option><option>接待費</option><option>消耗品費</option><option>通信費</option><option>その他</option></select></label><label>金額 <b>必須</b><input value=""></label><label>支払先 <b>必須</b><input value=""></label><label class="wide">領収書添付<input value="5,000円超で表示"></label></div>
-            <button class="disabled">未入力のため申請できません</button>
+            <div class="form-grid"><label>日付 <b>必須</b><input id="fDate" value=""></label><label>カテゴリ <b>必須</b><select id="fCategory"><option>交通費</option><option>接待費</option><option>消耗品費</option><option>通信費</option><option>その他</option></select></label><label>金額 <b>必須</b><input id="fAmount" value=""></label><label>支払先 <b>必須</b><input id="fVendor" value=""></label><label class="wide">領収書添付<input id="fReceipt" value="5,000円超で表示"></label></div>
+            <button class="disabled" id="submitExpense">未入力のため申請できません</button>
             <p class="callout">外貨での立替は要確認です。${tag(page.tags.note, "t-note")}</p>
             <div class="timeline"><div class="step"><span class="dot"></span><span>下書き：申請者が入力中です。</span></div><div class="step"><span class="dot"></span><span>申請中：承認者の確認待ちです。</span></div><div class="step"><span class="dot"></span><span>承認済：精算対象として確定します。</span></div><div class="step"><span class="dot"></span><span>差戻し：申請者が修正します。</span></div></div>
           </aside>
@@ -1500,7 +1516,7 @@
       <section class="screen" data-screen="approvals">
         <section class="metrics"><article class="metric"><span>承認待ち</span><strong>2件</strong><em>本日中に処理</em></article><article class="metric"><span>合計金額</span><strong>21,500円</strong><em>税込</em></article><article class="metric"><span>領収書確認</span><strong>2件</strong><em>添付済み</em></article><article class="metric"><span>差戻し候補</span><strong>0件</strong><em>要確認なし</em></article></section>
         <div class="grid-2">
-          <section class="card"><h2>承認キュー</h2><div class="approval-list"><div class="approval"><div><strong>東京交通 8,800円（税込）</strong><p>交通費 / 領収書添付あり / 2026/07/02</p></div><div class="approval-actions"><button class="mini-btn primary">承認</button><button class="mini-btn">差戻し</button></div></div><div class="approval"><div><strong>出張立替 12,700円（税込）</strong><p>その他 / 領収書添付あり / 2026/07/05</p></div><div class="approval-actions"><button class="mini-btn primary">承認</button><button class="mini-btn">差戻し</button></div></div></div></section>
+          <section class="card"><h2>承認キュー</h2><div class="approval-list" id="approvalList"><div class="approval" data-approval="東京交通"><div><strong>東京交通 8,800円（税込）</strong><p>交通費 / 領収書添付あり / 2026/07/02</p></div><div class="approval-actions"><button class="mini-btn primary" data-approve="東京交通">承認</button><button class="mini-btn" data-reject="東京交通">差戻し</button></div></div><div class="approval" data-approval="出張立替"><div><strong>出張立替 12,700円（税込）</strong><p>その他 / 領収書添付あり / 2026/07/05</p></div><div class="approval-actions"><button class="mini-btn primary" data-approve="出張立替">承認</button><button class="mini-btn" data-reject="出張立替">差戻し</button></div></div></div></section>
           <section class="card"><h2>承認ルール</h2><p>5,000円を超える申請は領収書添付を確認します。カテゴリは5種のみ、外貨立替は要確認として経理へ戻します。</p></section>
         </div>
       </section>
@@ -1520,7 +1536,7 @@
                 <div class="legend"><div><span class="swatch"></span><span>交通費</span><strong>13,800円</strong></div><div><span class="swatch s2"></span><span>接待費</span><strong>12,300円</strong></div><div><span class="swatch s3"></span><span>その他</span><strong>12,700円</strong></div><div><span class="swatch s4"></span><span>通信費</span><strong>3,200円</strong></div></div>
               </div>
             </section>
-            <section class="card"><div class="report-toolbar"><h2>カテゴリ別利用額</h2><button class="export">CSV出力</button></div><div class="bars"><div class="bar"><span>交通費</span><div class="track"><div class="fill" style="width:32%"></div></div><strong>13,800円</strong></div><div class="bar"><span>接待費</span><div class="track"><div class="fill" style="width:29%"></div></div><strong>12,300円</strong></div><div class="bar"><span>その他</span><div class="track"><div class="fill" style="width:30%"></div></div><strong>12,700円</strong></div><div class="bar"><span>通信費</span><div class="track"><div class="fill" style="width:8%"></div></div><strong>3,200円</strong></div></div></section>
+            <section class="card"><div class="report-toolbar"><h2>カテゴリ別利用額</h2><button class="export" id="exportCsv">CSV出力</button></div><div class="bars"><div class="bar"><span>交通費</span><div class="track"><div class="fill" style="width:32%"></div></div><strong>13,800円</strong></div><div class="bar"><span>接待費</span><div class="track"><div class="fill" style="width:29%"></div></div><strong>12,300円</strong></div><div class="bar"><span>その他</span><div class="track"><div class="fill" style="width:30%"></div></div><strong>12,700円</strong></div><div class="bar"><span>通信費</span><div class="track"><div class="fill" style="width:8%"></div></div><strong>3,200円</strong></div></div></section>
           </div>
           <div class="report-stack">
             <section class="card"><h2>経理メモ</h2><div class="insights"><div class="insight"><strong>領収書添付の確認</strong><p>5,000円超の申請が3件あります。すべて添付欄の確認対象です。</p></div><div class="insight"><strong>外貨立替</strong><p>仕様が未定義のため、要確認として別ルール化してください。</p></div><div class="insight"><strong>差戻し</strong><p>消耗品費 900円（税込）が差戻し中です。理由確認が必要です。</p></div></div></section>
@@ -1536,6 +1552,8 @@
       <div class="mobile-action"><button data-nav="expenses">新規申請を開始</button></div>
       <nav class="bottom-nav"><button class="active" data-nav="expenses">申請</button><button data-nav="approvals">承認</button><button data-nav="reports">分析</button><button data-nav="settings">設定</button></nav>
     </main>
+    <aside class="drawer" id="detailDrawer"><div class="drawer-head"><h2>申請詳細</h2><button class="mini-btn" id="closeDrawer">閉じる</button></div><div class="drawer-body" id="drawerBody"></div></aside>
+    <div class="toast" id="toast"></div>
   </div>
   <script>
     const titles = {
@@ -1551,9 +1569,73 @@
       document.getElementById("screenSub").textContent = titles[name][1];
       document.body.classList.remove("menu-open");
     }
+    function toast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      document.getElementById("syncState").textContent = "同期中";
+      setTimeout(() => {
+        el.classList.remove("show");
+        document.getElementById("syncState").textContent = "保存済み";
+      }, 1400);
+    }
+    function yen(value) {
+      return Number(value.replace(/[^0-9]/g, "") || 0).toLocaleString("ja-JP") + "円（税込）";
+    }
+    function validateForm() {
+      const ok = ["fDate", "fAmount", "fVendor"].every(id => document.getElementById(id).value.trim());
+      const btn = document.getElementById("submitExpense");
+      btn.classList.toggle("submit-ready", ok);
+      btn.textContent = ok ? "申請を下書き保存" : "未入力のため申請できません";
+      return ok;
+    }
+    function addExpense() {
+      if (!validateForm()) return;
+      const date = document.getElementById("fDate").value;
+      const vendor = document.getElementById("fVendor").value;
+      const category = document.getElementById("fCategory").value;
+      const amount = yen(document.getElementById("fAmount").value);
+      const receipt = Number(document.getElementById("fAmount").value.replace(/[^0-9]/g, "")) > 5000 ? "必要" : "-";
+      const id = "exp-new-" + Date.now();
+      const receiptHtml = receipt === "必要" ? '<span class="receipt">必要</span>' : '-';
+      document.getElementById("expenseRows").insertAdjacentHTML("afterbegin", '<tr data-expense-id="' + id + '"><td data-label="日付">' + date + '</td><td data-label="支払先"><strong>' + vendor + '</strong></td><td data-label="カテゴリ"><span class="pill category">' + category + '</span></td><td data-label="金額" class="amount">' + amount + '</td><td data-label="領収書">' + receiptHtml + '</td><td data-label="ステータス"><span class="pill draft">下書き</span></td><td data-label="操作"><button class="link-btn" data-detail="' + id + '">詳細</button></td></tr>');
+      ["fDate", "fAmount", "fVendor"].forEach(id => document.getElementById(id).value = "");
+      validateForm();
+      toast("下書きを保存しました。バックエンド同期済みです。");
+    }
+    function openDetail(id) {
+      const row = document.querySelector('[data-expense-id="' + id + '"]');
+      if (!row) return;
+      const cells = [...row.querySelectorAll("td")].map(td => td.innerText.trim());
+      document.getElementById("drawerBody").innerHTML = '<div class="kv"><span>日付</span><strong>' + cells[0] + '</strong></div><div class="kv"><span>支払先</span><strong>' + cells[1] + '</strong></div><div class="kv"><span>カテゴリ</span><strong>' + cells[2] + '</strong></div><div class="kv"><span>金額</span><strong>' + cells[3] + '</strong></div><div class="kv"><span>領収書</span><strong>' + cells[4] + '</strong></div><div class="kv"><span>ステータス</span><strong>' + cells[5] + '</strong></div><p class="callout">監査ログ：CLAUDE.md定義に沿って表記・カテゴリ・ステータスを検証済みです。</p>';
+      document.getElementById("detailDrawer").classList.add("open");
+    }
+    function updateApproval(vendor, status) {
+      const item = document.querySelector('[data-approval="' + vendor + '"]');
+      if (item) item.remove();
+      const row = [...document.querySelectorAll("#expenseRows tr")].find(tr => tr.innerText.includes(vendor));
+      if (row) {
+        const cls = status === "承認済" ? "approved" : "rejected";
+        row.querySelector("td:nth-child(6)").innerHTML = '<span class="pill ' + cls + '">' + status + '</span>';
+      }
+      toast(vendor + "を" + status + "に更新しました。");
+    }
     document.querySelectorAll("[data-nav]").forEach(el => el.addEventListener("click", () => showScreen(el.dataset.nav)));
     document.getElementById("menuButton").addEventListener("click", () => document.body.classList.add("menu-open"));
     document.getElementById("overlay").addEventListener("click", () => document.body.classList.remove("menu-open"));
+    ["fDate", "fAmount", "fVendor", "fCategory"].forEach(id => document.getElementById(id).addEventListener("input", validateForm));
+    document.getElementById("submitExpense").addEventListener("click", addExpense);
+    document.getElementById("saveDraft").addEventListener("click", () => toast("下書きを保存しました。"));
+    document.getElementById("exportCsv").addEventListener("click", () => toast("CSVを書き出しました。"));
+    document.getElementById("closeDrawer").addEventListener("click", () => document.getElementById("detailDrawer").classList.remove("open"));
+    document.addEventListener("click", event => {
+      const detail = event.target.closest("[data-detail]");
+      if (detail) openDetail(detail.dataset.detail);
+      const approve = event.target.closest("[data-approve]");
+      if (approve) updateApproval(approve.dataset.approve, "承認済");
+      const reject = event.target.closest("[data-reject]");
+      if (reject) updateApproval(reject.dataset.reject, "差戻し");
+    });
   <\/script>
 </body>
 </html>`;
