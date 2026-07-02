@@ -1357,11 +1357,42 @@
     .bar { display: grid; grid-template-columns: 90px 1fr 90px; gap: 10px; align-items: center; font-size: 13px; font-weight: 900; }
     .track { height: 10px; border-radius: 999px; background: #edf0f5; overflow: hidden; }
     .fill { height: 100%; border-radius: inherit; background: #cc0000; }
+    .report-layout { display: grid; grid-template-columns: 1.18fr .82fr; gap: 14px; }
+    .report-stack { display: grid; gap: 14px; }
+    .report-hero { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 18px; border-radius: 8px; background: #cc0000; color: #fff; box-shadow: 0 14px 34px rgba(204,0,0,.18); }
+    .report-hero h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: 0; }
+    .report-hero p { margin: 0; color: rgba(255,255,255,.88); font-size: 13px; font-weight: 850; line-height: 1.5; }
+    .hero-total { min-width: 156px; padding: 12px; border-radius: 8px; background: rgba(255,255,255,.14); text-align: right; }
+    .hero-total span { display: block; color: rgba(255,255,255,.82); font-size: 12px; font-weight: 950; }
+    .hero-total strong { display: block; margin-top: 6px; font-size: 26px; line-height: 1; }
+    .report-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .segment { display: flex; gap: 6px; padding: 4px; border-radius: 999px; background: #f2f4f8; }
+    .segment span { padding: 6px 10px; border-radius: 999px; color: #566173; font-size: 12px; font-weight: 950; }
+    .segment .on { background: #fff; color: #cc0000; box-shadow: 0 2px 8px rgba(17,24,39,.08); }
+    .export { min-height: 32px; padding: 0 10px; border: 1px solid #d6dce7; border-radius: 7px; background: #fff; color: #172033; font-size: 12px; font-weight: 950; }
+    .donut-row { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: center; }
+    .donut { width: 138px; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(#cc0000 0 32%, #ef4444 32% 61%, #f87171 61% 91%, #fecaca 91% 100%); position: relative; }
+    .donut::after { content: "42,900円"; position: absolute; inset: 24px; display: grid; place-items: center; border-radius: 50%; background: #fff; color: #172033; font-size: 15px; font-weight: 950; text-align: center; }
+    .legend { display: grid; gap: 8px; }
+    .legend div { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; color: #3b4351; font-size: 13px; font-weight: 900; }
+    .swatch { width: 10px; height: 10px; border-radius: 999px; background: #cc0000; }
+    .swatch.s2 { background: #ef4444; }
+    .swatch.s3 { background: #f87171; }
+    .swatch.s4 { background: #fecaca; }
+    .insights { display: grid; gap: 10px; }
+    .insight { padding: 12px; border: 1px solid #edf0f5; border-radius: 8px; background: #fafbfe; }
+    .insight strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .insight p { margin: 0; color: #566173; font-size: 12px; font-weight: 850; line-height: 1.5; }
+    .receipt-check { display: grid; gap: 9px; }
+    .check-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid #edf0f5; font-size: 13px; font-weight: 900; }
+    .check-row:last-child { border-bottom: 0; }
+    .ok-text { color: #15803d; }
+    .warn-text { color: #b45309; }
     .settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
     .policy { min-height: 150px; padding: 14px; border: 1px solid #e0e5ee; border-radius: 8px; background: #fff; }
     .policy h3 { margin: 0 0 8px; font-size: 16px; }
     .policy ul { margin: 0; padding-left: 18px; color: #3b4351; font-size: 13px; font-weight: 850; line-height: 1.6; }
-    .mobile-action { display: none; }
+    .mobile-action, .bottom-nav { display: none; }
     .tag { display: none; position: absolute; z-index: 6; width: 26px; height: 26px; place-items: center; border-radius: 999px; border: 2px solid #111827; background: #fff7ba; color: #111827; font-size: 14px; font-weight: 950; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
     body.show-reveal .tag { display: grid; }
     .t-bg { right: 12px; top: 12px; }
@@ -1383,8 +1414,15 @@
       .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
       .metric { min-height: 78px; padding: 11px; }
       .metric strong { font-size: 20px; }
-      .workspace, .grid-2, .settings { display: block; }
+      .workspace, .grid-2, .settings, .report-layout, .report-stack { display: block; }
       .panel, .form-panel, .card, .policy { margin-bottom: 12px; }
+      .report-hero { grid-template-columns: 1fr; margin-bottom: 12px; padding: 15px; }
+      .hero-total { min-width: 0; text-align: left; }
+      .report-toolbar { display: grid; gap: 8px; }
+      .segment { overflow-x: auto; }
+      .segment span { flex: 0 0 auto; }
+      .donut-row { grid-template-columns: 1fr; justify-items: center; }
+      .legend { width: 100%; }
       .panel { display: block; overflow: visible; }
       .panel-head { display: grid; gap: 10px; }
       .filters { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
@@ -1407,6 +1445,10 @@
       .bar strong { grid-column: 2; }
       .mobile-action { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 8; display: block; padding: 12px; border: 1px solid #e0e5ee; border-radius: 14px; background: rgba(255,255,255,.96); box-shadow: 0 12px 34px rgba(17,24,39,.22); }
       .mobile-action button { width: 100%; height: 42px; border-color: #cc0000; background: #cc0000; color: #fff; }
+      .bottom-nav { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 9; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px; border: 1px solid #e0e5ee; border-radius: 16px; background: rgba(255,255,255,.97); box-shadow: 0 12px 34px rgba(17,24,39,.22); }
+      .bottom-nav button { min-height: 42px; border: 0; border-radius: 11px; background: transparent; color: #566173; font-size: 11px; font-weight: 950; }
+      .bottom-nav button.active { background: #cc0000; color: #fff; }
+      .mobile-action { display: none; }
     }
   </style>
 </head>
@@ -1464,8 +1506,27 @@
       </section>
 
       <section class="screen" data-screen="reports">
+        <section class="report-hero">
+          <div><h2>2026年7月 月次レポート</h2><p>カテゴリ定義、税込表記、領収書添付ルールに沿って集計しています。</p></div>
+          <div class="hero-total"><span>今月の申請総額</span><strong>42,900円</strong></div>
+        </section>
         <section class="metrics"><article class="metric"><span>今月合計</span><strong>42,900円</strong><em>税込</em></article><article class="metric"><span>最大カテゴリ</span><strong>接待費</strong><em>12,300円</em></article><article class="metric"><span>平均申請額</span><strong>7,150円</strong><em>6件平均</em></article><article class="metric"><span>要確認</span><strong>1件</strong><em>外貨立替</em></article></section>
-        <div class="grid-2"><section class="card"><h2>カテゴリ別利用額</h2><div class="bars"><div class="bar"><span>交通費</span><div class="track"><div class="fill" style="width:32%"></div></div><strong>13,800円</strong></div><div class="bar"><span>接待費</span><div class="track"><div class="fill" style="width:29%"></div></div><strong>12,300円</strong></div><div class="bar"><span>その他</span><div class="track"><div class="fill" style="width:30%"></div></div><strong>12,700円</strong></div><div class="bar"><span>通信費</span><div class="track"><div class="fill" style="width:8%"></div></div><strong>3,200円</strong></div></div></section><section class="card"><h2>経理メモ</h2><p>今月は5,000円超の申請が3件あります。いずれも領収書添付が必要です。外貨立替の扱いは要確認として別途ルール化してください。</p></section></div>
+        <div class="report-layout">
+          <div class="report-stack">
+            <section class="card">
+              <div class="report-toolbar"><h2>カテゴリ分析</h2><div class="segment"><span class="on">今月</span><span>前月</span><span>四半期</span></div></div>
+              <div class="donut-row">
+                <div class="donut"></div>
+                <div class="legend"><div><span class="swatch"></span><span>交通費</span><strong>13,800円</strong></div><div><span class="swatch s2"></span><span>接待費</span><strong>12,300円</strong></div><div><span class="swatch s3"></span><span>その他</span><strong>12,700円</strong></div><div><span class="swatch s4"></span><span>通信費</span><strong>3,200円</strong></div></div>
+              </div>
+            </section>
+            <section class="card"><div class="report-toolbar"><h2>カテゴリ別利用額</h2><button class="export">CSV出力</button></div><div class="bars"><div class="bar"><span>交通費</span><div class="track"><div class="fill" style="width:32%"></div></div><strong>13,800円</strong></div><div class="bar"><span>接待費</span><div class="track"><div class="fill" style="width:29%"></div></div><strong>12,300円</strong></div><div class="bar"><span>その他</span><div class="track"><div class="fill" style="width:30%"></div></div><strong>12,700円</strong></div><div class="bar"><span>通信費</span><div class="track"><div class="fill" style="width:8%"></div></div><strong>3,200円</strong></div></div></section>
+          </div>
+          <div class="report-stack">
+            <section class="card"><h2>経理メモ</h2><div class="insights"><div class="insight"><strong>領収書添付の確認</strong><p>5,000円超の申請が3件あります。すべて添付欄の確認対象です。</p></div><div class="insight"><strong>外貨立替</strong><p>仕様が未定義のため、要確認として別ルール化してください。</p></div><div class="insight"><strong>差戻し</strong><p>消耗品費 900円（税込）が差戻し中です。理由確認が必要です。</p></div></div></section>
+            <section class="card"><h2>領収書チェック</h2><div class="receipt-check"><div class="check-row"><span>東京交通 8,800円（税込）</span><strong class="ok-text">添付済</strong></div><div class="check-row"><span>青山会館 12,300円（税込）</span><strong class="ok-text">添付済</strong></div><div class="check-row"><span>出張立替 12,700円（税込）</span><strong class="warn-text">確認中</strong></div></div></section>
+          </div>
+        </div>
       </section>
 
       <section class="screen" data-screen="settings">
@@ -1473,6 +1534,7 @@
       </section>
 
       <div class="mobile-action"><button data-nav="expenses">新規申請を開始</button></div>
+      <nav class="bottom-nav"><button class="active" data-nav="expenses">申請</button><button data-nav="approvals">承認</button><button data-nav="reports">分析</button><button data-nav="settings">設定</button></nav>
     </main>
   </div>
   <script>
